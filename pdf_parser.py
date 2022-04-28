@@ -2,6 +2,7 @@ import os
 import fitz
 import textract
 import re
+import shutil
 import pandas as pd
 from glob import glob
 
