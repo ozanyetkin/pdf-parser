@@ -1,25 +1,38 @@
 import os
 import fitz
+import textract
+import re
+import pandas as pd
 from glob import glob
 
 files = []
 start_dir = "/mnt/c/Users/Yetkin/Downloads/ARCH 282 All Sections-Mid Term Assignment-70029"
 pattern   = "*.pdf"
+df = pd.DataFrame(columns=["name", "page_count", "image_count", "word_count"])
 
 for dir,_,_ in os.walk(start_dir):
-    files.extend(glob(os.path.join(dir,pattern))) 
+    files.extend(glob(os.path.join(dir,pattern)))
 
-for file in files:
+for i, file in enumerate(files):
     pdf_file = fitz.open(file)
     student_name = file.split("/")[-2].split("_")[0]
     page_count = len(pdf_file)
+    
     image_count = 0
-
     for page_index in range(len(pdf_file)):
         image_list = pdf_file[page_index].get_images()
         
         if image_list:
             image_count += len(image_list)
 
-    print(student_name, f"page count: {page_count}",f"image count: {image_count}")
+    text = textract.process(file).decode('utf-8')
+    words = re.findall(r"[^\W_]+", text, re.MULTILINE)
+    word_count = len(words)
+
+    # print(student_name, f"page count: {page_count}", f"image count: {image_count}", f"word count: {word_count}")
+
+    df.loc[i] = [student_name, page_count, image_count, word_count]
     pdf_file.close()
+
+print(df)
+df.to_excel("output.xlsx")
